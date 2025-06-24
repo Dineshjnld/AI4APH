@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCTNS Copilot Engine</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <img src="/static/assets/police-logo.png" alt="AP Police" class="logo">
+                <h1>🛡️ CCTNS Copilot Engine</h1>
+                <p class="subtitle">AI-Powered Database Assistant for Andhra Pradesh Police</p>
+            </div>
+        </header>
+
+        <main>
+            <!-- Voice Input Section -->
+            <section class="voice-section">
+                <h2>🎤 Voice Query</h2>
+                <div class="voice-controls">
+                    <button id="voiceBtn" class="voice-button" onclick="toggleVoice()">
+                        <span id="voiceIcon">🎤</span>
+                        <span id="voiceText">Start Voice Query</span>
+                    </button>
+                    <select id="languageSelect">
+                        <option value="te">Telugu</option>
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                    </select>
+                </div>
+                <div id="voiceStatus" class="status-message"></div>
+            </section>
+
+            <!-- Text Input Section -->
+            <section class="text-section">
+                <h2>💬 Text Query</h2>
+                <div class="query-input">
+                    <textarea id="queryText" placeholder="Type your CCTNS query here... (e.g., 'Show crimes in Guntur district')"></textarea>
+                    <button onclick="processTextQuery()" class="process-button">Process Query</button>
+                </div>
+            </section>
+
+            <!-- Quick Commands -->
+            <section class="quick-commands">
+                <h3>Quick Commands</h3>
+                <div class="command-grid">
+                    <button onclick="quickQuery('Show total crimes in Guntur district')" class="quick-btn">
+                        Guntur District Crimes
+                    </button>
+                    <button onclick="quickQuery('Count FIRs registered today')" class="quick-btn">
+                        Today's FIRs
+                    </button>
+                    <button onclick="quickQuery('Officer performance this month')" class="quick-btn">
+                        Officer Performance
+                    </button>
+                    <button onclick="quickQuery('Station activity trends')" class="quick-btn">
+                        Station Activity
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <h2>📊 Results</h2>
+                
+                <!-- SQL Display -->
+                <div id="sqlDisplay" class="sql-display" style="display: none;">
+                    <h3>Generated SQL</h3>
+                    <pre id="sqlCode"></pre>
+                    <button onclick="copySql()" class="copy-btn">Copy SQL</button>
+                </div>
+
+                <!-- Data Table -->
+                <div id="resultsTable" class="results-table" style="display: none;">
+                    <div class="table-controls">
+                        <span id="resultCount"></span>
+                        <button onclick="exportResults('csv')" class="export-btn">Export CSV</button>
+                        <button onclick="exportResults('excel')" class="export-btn">Export Excel</button>
+                    </div>
+                    <div id="tableContainer"></div>
+                </div>
+
+                <!-- Visualization -->
+                <div id="chartContainer" class="chart-container" style="display: none;">
+                    <h3>Visualization</h3>
+                    <div id="plotlyChart"></div>
+                </div>
+
+                <!-- Summary -->
+                <div id="summaryContainer" class="summary-container" style="display: none;">
+                    <h3>AI Summary</h3>
+                    <div id="summaryText"></div>
+                    <button onclick="speakSummary()" class="speak-btn">🔊 Speak Summary</button>
+                </div>
+            </section>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing your query...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/voice.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

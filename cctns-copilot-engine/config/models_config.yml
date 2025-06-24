@@ -1,0 +1,88 @@
+models:
+  speech_to_text:
+    primary:
+      name: "ai4bharat/indicconformer"
+      language_support: ["te", "hi", "en-IN"]
+      confidence_threshold: 0.7
+      device: "auto"
+    fallback:
+      name: "openai/whisper-medium"
+      language_support: ["te", "hi", "en"]
+      confidence_threshold: 0.6
+      device: "auto"
+  
+  text_processing:
+    grammar_correction:
+      name: "google/flan-t5-base"
+      temperature: 0.3
+      max_length: 200
+    enhancement:
+      name: "microsoft/DialoGPT-medium"
+      temperature: 0.1
+      max_length: 100
+  
+  sql_generation:
+    primary:
+      name: "microsoft/CodeT5-base"
+      temperature: 0.1
+      max_length: 300
+      beam_size: 5
+    fallback:
+      name: "rule_based"
+      confidence_threshold: 0.8
+  
+  summarization:
+    model: "google/pegasus-cnn_dailymail"
+    max_length: 150
+    min_length: 30
+    num_beams: 4
+
+cctns_schema:
+  tables:
+    - name: "DISTRICT_MASTER"
+      columns: ["district_id", "district_code", "district_name"]
+      type: "master"
+    - name: "STATION_MASTER"
+      columns: ["station_id", "station_name", "district_id"]
+      type: "master"
+      foreign_keys: ["district_id -> DISTRICT_MASTER.district_id"]
+    - name: "OFFICER_MASTER"
+      columns: ["officer_id", "officer_name", "rank", "station_id"]
+      type: "master"
+      foreign_keys: ["station_id -> STATION_MASTER.station_id"]
+    - name: "CRIME_TYPE_MASTER"
+      columns: ["crime_type_id", "crime_code", "description"]
+      type: "master"
+    - name: "FIR"
+      columns: ["fir_id", "district_id", "crime_type_id", "incident_date", "status"]
+      type: "transaction"
+      foreign_keys: 
+        - "district_id -> DISTRICT_MASTER.district_id"
+        - "crime_type_id -> CRIME_TYPE_MASTER.crime_type_id"
+    - name: "ARREST"
+      columns: ["arrest_id", "fir_id", "officer_id", "arrest_date"]
+      type: "transaction"
+      foreign_keys:
+        - "fir_id -> FIR.fir_id"
+        - "officer_id -> OFFICER_MASTER.officer_id"
+
+police_terminology:
+  corrections:
+    "fir": "FIR"
+    "sho": "SHO"
+    "station house officer": "SHO"
+    "guntur": "Guntur"
+    "vijayawada": "Vijayawada"
+    "visakhapatnam": "Visakhapatnam"
+    "tirupati": "Tirupati"
+    "kurnool": "Kurnool"
+  
+  districts:
+    - "Guntur"
+    - "Vijayawada"
+    - "Visakhapatnam"
+    - "Tirupati"
+    - "Kurnool"
+    - "Nellore"
+    - "Kadapa"
+    - "Chittoor"
