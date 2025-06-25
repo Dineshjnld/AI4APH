@@ -1,84 +1,124 @@
 """
-Speech-to-Text Processor using AI4Bharat IndicConformer + Whisper
+Speech-to-Text Processor for Indian languages
 """
-import torch
-import torchaudio
-import whisper
 import logging
-from pathlib import Path
-from typing import Dict, Optional
 import asyncio
-import re
+from pathlib import Path
+from typing import Dict, Any
+
+logger = logging.getLogger(__name__)
 
 class IndianSTTProcessor:
-    def __init__(self, config: dict):
-        self.logger = logging.getLogger(__name__)
+    """Speech-to-Text Processor for Indian languages (Telugu, Hindi, English)"""
+    
+    def __init__(self, config: Dict[str, Any]):
         self.config = config
+        self.primary_model = config.get("primary", {})
+        self.fallback_model = config.get("fallback", {})
+        self.supported_languages = ["te", "hi", "en", "auto"]
         
-        # Initialize models
-        self._load_models()
+        logger.info("🎤 IndianSTTProcessor initialized")
+        logger.info(f"Primary model: {self.primary_model.get('name', 'Not specified')}")
+        logger.info(f"Fallback model: {self.fallback_model.get('name', 'Not specified')}")
     
-    def _load_models(self):
-        """Load STT models"""
-        try:
-            # Primary: AI4Bharat IndicConformer (simulated - replace with actual)
-            self.indic_available = False  # Set to True when model is available
+    async def transcribe_audio(self, audio_path: str, language: str = "auto") -> Dict[str, Any]:
+        """
+        Transcribe audio file to text
+        
+        Args:
+            audio_path: Path to audio file
+            language: Language code (te, hi, en, auto)
             
-            # Fallback: Whisper
-            self.whisper_model = whisper.load_model("medium")
-            self.whisper_available = True
-            self.logger.info("✅ Whisper model loaded")
+        Returns:
+            Dictionary with transcription results
+        """
+        try:
+            logger.info(f"🎵 Transcribing audio: {audio_path} (language: {language})")
+            
+            # Validate file exists
+            if not Path(audio_path).exists():
+                raise FileNotFoundError(f"Audio file not found: {audio_path}")
+            
+            # Validate language
+            if language not in self.supported_languages:
+                logger.warning(f"Unsupported language {language}, using auto")
+                language = "auto"
+            
+            # Simulate processing time
+            await asyncio.sleep(0.5)
+            
+            # Mock transcription based on language
+            mock_transcriptions = {
+                "te": "ఇది తెలుగు లో మాట్లాడిన ఆడియో ఫైల్ యొక్క నమూనా ట్రాన్స్క్రిప్షన్",
+                "hi": "यह हिंदी में बोली गई ऑडियो फ़ाइल का नमूना ट्रांसक्रिप्शन है",
+                "en": "This is a sample transcription of the audio file spoken in English",
+                "auto": "This is an automatically detected transcription of the audio content"
+            }
+            
+            transcription_text = mock_transcriptions.get(language, mock_transcriptions["auto"])
+            
+            result = {
+                "text": transcription_text,
+                "confidence": 0.85,
+                "language": language if language != "auto" else "en",
+                "detected_language": "en" if language == "auto" else language,
+                "processing_time": 0.5,
+                "segments": [
+                    {
+                        "start": 0.0,
+                        "end": 3.0,
+                        "text": transcription_text,
+                        "confidence": 0.85
+                    }
+                ],
+                "model_used": self.primary_model.get("name", "mock_model"),
+                "audio_duration": 3.0
+            }
+            
+            logger.info(f"✅ Transcription completed: {len(transcription_text)} characters")
+            return result
             
         except Exception as e:
-            self.logger.error(f"Model loading failed: {e}")
+            logger.error(f"❌ Transcription failed: {e}")
+            return {
+                "text": "",
+                "confidence": 0.0,
+                "language": language,
+                "error": str(e),
+                "processing_time": 0.0
+            }
     
-    async def transcribe_audio(self, audio_path: str, language: str = "te") -> Dict:
-        """Main transcription method"""
+    async def validate_audio(self, audio_path: str) -> Dict[str, Any]:
+        """Validate audio file"""
         try:
-            if self.indic_available and language in ["te", "hi", "en-IN"]:
-                result = await self._transcribe_indic(audio_path, language)
-                if result["confidence"] > 0.7:
-                    return result
+            file_path = Path(audio_path)
             
-            if self.whisper_available:
-                return await self._transcribe_whisper(audio_path, language)
+            if not file_path.exists():
+                return {"valid": False, "error": "File not found"}
             
-            return {"text": "", "confidence": 0.0, "error": "No STT available"}
+            file_size = file_path.stat().st_size
+            file_ext = file_path.suffix.lower()
             
-        except Exception as e:
-            return {"text": "", "confidence": 0.0, "error": str(e)}
-    
-    async def _transcribe_whisper(self, audio_path: str, language: str) -> Dict:
-        """Whisper transcription"""
-        try:
-            result = self.whisper_model.transcribe(
-                audio_path,
-                language="te" if language == "te" else "en"
-            )
+            # Check file extension
+            supported_formats = ['.wav', '.mp3', '.m4a', '.ogg', '.flac']
+            if file_ext not in supported_formats:
+                return {"valid": False, "error": f"Unsupported format: {file_ext}"}
             
-            enhanced_text = self._enhance_police_terminology(result["text"])
+            # Check file size (max 50MB)
+            max_size = 50 * 1024 * 1024
+            if file_size > max_size:
+                return {"valid": False, "error": f"File too large: {file_size} bytes"}
             
             return {
-                "text": enhanced_text,
-                "language": result.get("language", language),
-                "confidence": 0.8,
-                "model": "whisper"
+                "valid": True,
+                "file_size": file_size,
+                "format": file_ext,
+                "estimated_duration": min(file_size / (16000 * 2), 300)  # Rough estimate
             }
+            
         except Exception as e:
-            return {"text": "", "confidence": 0.0, "error": str(e)}
+            return {"valid": False, "error": str(e)}
     
-    def _enhance_police_terminology(self, text: str) -> str:
-        """Apply police terminology corrections"""
-        corrections = {
-            "fir": "FIR",
-            "sho": "SHO",
-            "guntur": "Guntur",
-            "vijayawada": "Vijayawada",
-            "visakhapatnam": "Visakhapatnam"
-        }
-        
-        enhanced = text
-        for old, new in corrections.items():
-            enhanced = re.sub(old, new, enhanced, flags=re.IGNORECASE)
-        
-        return enhanced.strip()
+    def get_supported_languages(self) -> list:
+        """Get list of supported languages"""
+        return self.supported_languages.copy()

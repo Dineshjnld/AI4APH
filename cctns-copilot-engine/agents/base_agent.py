@@ -204,6 +204,7 @@ class BaseAgent(ABC):
         }
         self.logger.info(f"🔄 Agent {self.name} reset")
 
+
 class AgentCoordinator:
     """Coordinates multiple agents working together"""
     
